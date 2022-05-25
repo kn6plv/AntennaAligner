@@ -17,6 +17,10 @@ class Antenna {
     }
 }
 
+Antenna.init = async () => {
+    await Servo.init();
+}
+
 Antenna.shutdown = () => {
     Servo.shutdown();
 }

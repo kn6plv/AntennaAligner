@@ -2,19 +2,7 @@ const Log = require("debug")("servo");
 const i2cBus = require("i2c-bus");
 const Pca9685Driver = require("pca9685").Pca9685Driver;
 
-const pwm = new Pca9685Driver({
-    i2c: i2cBus.openSync(1),
-    address: 0x40,
-    frequency: 50,
-    debug: true
-}, err => {
-    if (err) {
-        console.error("Error initializing PCA9685");
-    }
-    else {
-        pwm.allChannelsOff();
-    }
-});
+let pwm = null;
 
 function pos2ms(pos) {
     return 1500 + pos * 11.11;
@@ -33,13 +21,14 @@ class Servo {
     }
 
     enable(isEnabled) {
+        Log("enable", isEnabled);
         if (this.enabled != isEnabled) {
             this.enabled = isEnabled;
-            if (!this.enabled) {
-                pwm.channelOff(this.channel)
+            if (this.enabled) {
+                pwm.channelOn(this.channel)
             }
             else {
-                pwm.channelOn(this.channel);
+                pwm.channelOff(this.channel);
             }
         }
         if (typeof this.position === "number") {
@@ -48,6 +37,7 @@ class Servo {
     }
 
     setPosition(pos) {
+        Log("setPosition", pos);
         if (pos < this.limits.low) {
             pos = this.limits.low;
         }
@@ -62,7 +52,26 @@ class Servo {
 
 }
 
+Servo.init = () => {
+    return new Promise((success, failed) => {
+        pwm = new Pca9685Driver({
+            i2c: i2cBus.openSync(1),
+            address: 0x40,
+            frequency: 50
+        }, err => {
+            if (err) {
+                console.error("Error initializing PCA9685");
+                failed(err);
+            }
+            else {
+                success();
+            }
+        });
+    });
+}
+
 Servo.shutdown = () => {
+    Log("shutdown");
     pwm.allChannelsOff();
 }
 
