@@ -5,15 +5,19 @@ const Servo = require("./Servo");
 class Antenna {
 
     constructor(config) {
+        this.config = config;
         this.servo = new Servo(config);
     }
 
-    setPosition(pos) {
-        this.servo.setPosition(pos);
+    async setHeading(heading) {
+        if (this.config.north) {
+            heading += this.config.north;
+        }
+        await this.servo.setPosition(heading);
     }
 
-    enable() {
-        this.servo.enable(true);
+    async enable() {
+        await this.servo.enable(true);
     }
 }
 

@@ -6,42 +6,46 @@ const Antenna = require("./Antenna");
 
 (async () => {
 
-    await Antenna.init();
-
     const argv = process.argv.slice(2);
     switch (argv[0]) {
         case "--setAll":
         {
-            Config.antennas.forEach(config => {
-                const ant = new Antenna(config);
-                ant.enable();
-            });
+            await Antenna.init();
+            for (let name in Config.config) {
+                const ant = new Antenna(Config.config[name]);
+                const settings = Config.setting[name];
+                if (settings) {
+                    await ant.setHeading(settings.heading);
+                    await ant.enable();
+                }
+            }
             break;
         }
-        case "--setPosition":
+        case "--setHeading":
         {
-            const config = Config.antennas.find(ant => ant.name == argv[1]);
+            await Antenna.init();
+            const config = Config.config[argv[1]];
             if (!config) {
                 console.error(`No such antenna: ${argv[1]}`);
                 process.exit(1);
             }
             const pos = parseFloat(argv[2]);
             if (isNaN(pos)) {
-                console.error(`Bad antenna position: ${argv[2]}`);
+                console.error(`Bad antenna heading: ${argv[2]}`);
                 process.exit(1);
             }
             const ant = new Antenna(config);
-            ant.setPosition(pos);
-            ant.enable();
+            await ant.setHeading(pos);
+            await ant.enable();
             break;
         }
         default:
-            console.error("Unknown command");
+            console.error(`Commands:
+  --setAll
+  --setHeading <antenna> <heading>`);
             process.exit(1);
     }
 
-    // Wait a bit before exiting
-    await new Promise(_ => setTimeout(_, 2000));
     Antenna.shutdown();
     process.exit();
 

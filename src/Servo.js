@@ -1,11 +1,21 @@
 const Log = require("debug")("servo");
 const i2cBus = require("i2c-bus");
 const Pca9685Driver = require("pca9685").Pca9685Driver;
+const AsyncLock = require('async-lock');
+
+const ServoLock = new AsyncLock();
 
 let pwm = null;
 
 function pos2ms(pos) {
     return 1500 + pos * 11.11;
+}
+
+async function use(fn) {
+    await ServoLock.acquire("servos", async () => {
+        await fn();
+        await new Promsise(_ => setTimeout(_, (time || 1) * 1000));
+    });
 }
 
 class Servo {
@@ -20,15 +30,15 @@ class Servo {
         }
     }
 
-    enable(isEnabled) {
+    async enable(isEnabled) {
         Log("enable", isEnabled);
         if (this.enabled != isEnabled) {
             this.enabled = isEnabled;
             if (this.enabled) {
-                pwm.channelOn(this.channel)
+                await use(() => pwm.channelOn(this.channel));
             }
             else {
-                pwm.channelOff(this.channel);
+                await use(() => pwm.channelOff(this.channel));
             }
         }
         if (typeof this.position === "number") {
@@ -36,7 +46,7 @@ class Servo {
         }
     }
 
-    setPosition(pos) {
+    async setPosition(pos) {
         Log("setPosition", pos);
         if (pos < this.limits.low) {
             pos = this.limits.low;
@@ -46,13 +56,13 @@ class Servo {
         }
         this.position = pos;
         if (this.enabled) {
-            pwm.setPulseLength(this.channel, pos2ms(this.position));
+            await use(() => pwm.setPulseLength(this.channel, pos2ms(this.position)));
         }
     }
 
 }
 
-Servo.init = () => {
+Servo.init = async () => {
     return new Promise((success, failed) => {
         pwm = new Pca9685Driver({
             i2c: i2cBus.openSync(1),
