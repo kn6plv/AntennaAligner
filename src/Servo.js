@@ -14,7 +14,7 @@ function pos2ms(pos) {
 async function use(fn) {
     await ServoLock.acquire("servos", async () => {
         await fn();
-        await new Promsise(_ => setTimeout(_, (time || 1) * 1000));
+        await new Promise(_ => setTimeout(_, 1000));
     });
 }
 
