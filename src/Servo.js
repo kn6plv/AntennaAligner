@@ -7,10 +7,6 @@ const ServoLock = new AsyncLock();
 
 let pwm = null;
 
-function pos2ms(pos) {
-    return 1500 + pos * 11.11;
-}
-
 async function use(fn) {
     await ServoLock.acquire("servos", async () => {
         await fn();
@@ -28,6 +24,7 @@ class Servo {
             low: config.low || -90,
             high: config.high || 90
         }
+	this.scale = config.invert ? -5.555 : 5.555;
     }
 
     async enable(isEnabled) {
@@ -56,7 +53,7 @@ class Servo {
         }
         this.position = pos;
         if (this.enabled) {
-            await use(() => pwm.setPulseLength(this.channel, pos2ms(this.position)));
+            await use(() => pwm.setPulseLength(this.channel, 1500 + this.scale * this.position));
         }
     }
 
@@ -67,7 +64,7 @@ Servo.init = async () => {
         pwm = new Pca9685Driver({
             i2c: i2cBus.openSync(1),
             address: 0x40,
-            frequency: 50
+            frequency: 100
         }, err => {
             if (err) {
                 console.error("Error initializing PCA9685");

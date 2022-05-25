@@ -46,6 +46,7 @@ const Antenna = require("./Antenna");
             process.exit(1);
     }
 
+    await new Promise(_ => setTimeout(_, 2000));
     Antenna.shutdown();
     process.exit();
 
