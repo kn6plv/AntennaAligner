@@ -11,13 +11,11 @@ const Antenna = require("./Antenna");
         case "--setAll":
         {
             await Antenna.init();
-            for (let name in Config.config) {
+            for (let name in Config.setting) {
                 const ant = new Antenna(Config.config[name]);
                 const settings = Config.setting[name];
-                if (settings) {
-                    await ant.setHeading(settings.heading);
-                    await ant.enable();
-                }
+                await ant.setHeading(settings.heading);
+                await ant.enable();
             }
             break;
         }
