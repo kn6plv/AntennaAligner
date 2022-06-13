@@ -13,10 +13,28 @@ const Antenna = require("./Antenna");
             await Antenna.init();
             for (let name in Config.setting) {
                 const ant = new Antenna(Config.config[name]);
-                const settings = Config.setting[name];
-                await ant.setHeading(settings.heading);
+                const setting = Config.setting[name];
+                await ant.setHeading(setting.heading);
                 await ant.enable();
             }
+            break;
+        }
+        case "--set":
+        {
+            await Antenna.init();
+            const config = Config.config[argv[1]];
+            if (!config) {
+                console.error(`No such antenna: ${argv[1]}`);
+                process.exit(1);
+            }
+            const setting = Config.setting[argv[1]];
+            if (!setting) {
+                console.error(`No antenna settings: ${argv[1]}`);
+                process.exit(1);
+            }
+            const ant = new Antenna(config);
+            await ant.setHeading(setting.heading);
+            await ant.enable();
             break;
         }
         case "--setHeading":
@@ -40,6 +58,7 @@ const Antenna = require("./Antenna");
         default:
             console.error(`Commands:
   --setAll
+  --set <antenna>
   --setHeading <antenna> <heading>`);
             process.exit(1);
     }
