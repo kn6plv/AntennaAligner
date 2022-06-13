@@ -6,24 +6,25 @@ class Antenna {
 
     constructor(config) {
         this.config = config;
-        this.servo = new Servo(config);
+        this.servo = new Servo(config.servo);
     }
 
     async setHeading(heading) {
-        if (this.config.north) {
-            heading += this.config.north;
-	    if (heading > 180) {
-                heading -= 360;
-            }
-	    else if (heading < -180) {
-                heading += 360;
-            }
+        Log("setHeading", heading);
+        if (this.config.zero) {
+            heading -= this.config.zero;
+        }
+        while (heading > 180) {
+            heading -= 360;
+        }
+        while (heading < -180) {
+            heading += 360;
         }
         await this.servo.setPosition(heading);
     }
 
-    async enable() {
-        await this.servo.enable(true);
+    async enable(en) {
+        await this.servo.enable(en);
     }
 }
 

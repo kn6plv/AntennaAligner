@@ -18,19 +18,20 @@ class Servo {
 
     constructor(config) {
         this.enabled = false;
+        this.position = null;
         this.channel = config.channel;
-        this.position = config.position;
-        this.limits = {
-            low: config.low || -90,
-            high: config.high || 90
-        }
-	this.scale = config.invert ? -5.555 : 5.555;
+        this.low = config.low || -140;
+        this.high = config.high || 140;
+        this.scale = config.invert ? -5.555 : 5.555;
     }
 
-    async enable(isEnabled) {
-        Log("enable", isEnabled);
-        if (this.enabled != isEnabled) {
-            this.enabled = isEnabled;
+    async enable(en) {
+        if (en !== false) {
+            en = true;
+        }
+        Log("enable", en);
+        if (this.enabled != en) {
+            this.enabled = en;
             if (this.enabled) {
                 await use(() => pwm.channelOn(this.channel));
             }
@@ -45,11 +46,11 @@ class Servo {
 
     async setPosition(pos) {
         Log("setPosition", pos);
-        if (pos < this.limits.low) {
-            pos = this.limits.low;
+        if (pos < this.low) {
+            pos = this.low;
         }
-        if (pos > this.limits.high) {
-            pos = this.limits.high;
+        if (pos > this.high) {
+            pos = this.high;
         }
         this.position = pos;
         if (this.enabled) {
