@@ -10,7 +10,6 @@ let pwm = null;
 async function use(fn) {
     await ServoLock.acquire("servos", async () => {
         await fn();
-        await new Promise(_ => setTimeout(_, 1000));
     });
 }
 
@@ -45,7 +44,7 @@ class Servo {
     }
 
     async setPosition(pos) {
-        Log("setPosition", pos);
+        Log("setPosition", pos, this.enabled ? "enabled" : "disabled");
         if (pos < this.low) {
             pos = this.low;
         }
@@ -65,7 +64,7 @@ Servo.init = async () => {
         pwm = new Pca9685Driver({
             i2c: i2cBus.openSync(1),
             address: 0x40,
-            frequency: 100
+            frequency: 50
         }, err => {
             if (err) {
                 console.error("Error initializing PCA9685");
